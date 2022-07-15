@@ -10,11 +10,11 @@ using UnityEngine;
 [System.Serializable]
 public struct OrbitalBody
 {
-    int index;
+    public int index;
     public OrbitalData orbitalData;
     public PlanetaryData planetaryData;
 
-    [SerializeField] private Vector3D nextForceVector;
+    public Vector3D nextForceVector;
 
     public OrbitalBody(OrbitalBodySO so, int index)
     {
@@ -24,27 +24,104 @@ public struct OrbitalBody
         nextForceVector = Vector3D.zero;
     }
 
+    public OrbitalBody(OrbitalData orbitalData, PlanetaryData planetaryData, int index)
+    {
+        this.index = index;
+        this.orbitalData = orbitalData;
+        this.planetaryData = planetaryData;
+        nextForceVector = Vector3D.zero;
+    }
+
     public void CalculateForces(OrbitalBody[] orbitalBodies, bool useJobs)
+    {
+        if (useJobs)
+        {
+            NativeArray<Vector3D> orbitalBodyPositions = new NativeArray<Vector3D>(orbitalBodies.Length, Allocator.Temp);
+            NativeArray<double> orbitalBodyMasses = new NativeArray<double>(orbitalBodies.Length, Allocator.Temp);
+            NativeArray<Vector3D> forceOut = new NativeArray<Vector3D>(1, Allocator.Temp);
+            for (int i = 0; i < orbitalBodies.Length; i++)
+            {
+                orbitalBodyPositions[i] = orbitalBodies[i].orbitalData.position;
+                orbitalBodyMasses[i] = orbitalBodies[i].planetaryData.mass;
+            }
+
+            CalculateForcesJob calculateForceJob = new CalculateForcesJob()
+            {
+                output = forceOut,
+                orbitalBodyPositions = orbitalBodyPositions,
+                orbitalBodyMasses = orbitalBodyMasses,
+                originBodyIndex = index,
+            };
+
+            JobHandle dependecy = new JobHandle();
+            JobHandle scheduleDependency = calculateForceJob.Schedule(orbitalBodies.Length, dependecy);
+            JobHandle scheduleParallelJob = calculateForceJob.ScheduleParallel(orbitalBodies.Length, 64, scheduleDependency);
+
+            scheduleParallelJob.Complete();
+
+            nextForceVector = calculateForceJob.output[0];
+
+            orbitalBodyPositions.Dispose();
+            orbitalBodyMasses.Dispose();
+            forceOut.Dispose();
+
+            //Debug.Log(planetaryData.name + ": " + nextForceVector);
+        }
+        else
+        {
+            Vector3D force = Vector3D.zero;
+            Vector3D rotation = Vector3D.zero;
+            for (int i = 0; i < orbitalBodies.Length; i++)
+            {
+                if (i == index) { continue; }
+                //force += NBodyPhysics.CalculateForce(orbitalData.position, planetaryData.mass, orbitalBodies[i].orbitalData.position, orbitalBodies[i].planetaryData.mass);
+                force = CalculateForce(orbitalBodies[i]);
+            }
+            //Debug.Log(force);
+            nextForceVector = force;
+            //Debug.Log(nextForceVector);
+            //nextRotationVector = force;
+        }
+    }
+
+    public void CalculateForces(OrbitalBody[] orbitalBodies)
     {
         Vector3D force = Vector3D.zero;
         Vector3D rotation = Vector3D.zero;
         for (int i = 0; i < orbitalBodies.Length; i++)
         {
             if (i == index) { continue; }
-            force += NBodyPhysics.CalculateForce(orbitalData.position, planetaryData.mass, orbitalBodies[i].orbitalData.position, orbitalBodies[i].planetaryData.mass);
+            //force += NBodyPhysics.CalculateForce(orbitalData.position, planetaryData.mass, orbitalBodies[i].orbitalData.position, orbitalBodies[i].planetaryData.mass);
+            force = CalculateForce(orbitalBodies[i]);
         }
         //Debug.Log(force);
         nextForceVector = force;
+        //Debug.Log(nextForceVector);
+        //nextRotationVector = force;
+    }
+
+    public void CalculateForces(NativeArray<OrbitalBody> orbitalBodies)
+    {
+        Vector3D force = Vector3D.zero;
+        Vector3D rotation = Vector3D.zero;
+        for (int i = 0; i < orbitalBodies.Length; i++)
+        {
+            if (i == index) { continue; }
+            force += CalculateForce(orbitalBodies[i]);
+        }
+        //Debug.Log(force);
+        nextForceVector = force;
+        //Debug.Log(nextForceVector);
         //nextRotationVector = force;
     }
 
 
-    //public Vector3D CalculateForce(OrbitalBody orbitalBody)
-    //{
-    //    Vector3D direction = (orbitalBody.position - position).normilized;
-    //    double force = NBodySimulation.G * (orbitalBodyData.mass * orbitalBody.orbitalBodyData.mass / (Vector3D.Distance(position, orbitalBody.position) * Vector3D.Distance(position, orbitalBody.position)));
-    //    return force * direction;
-    //}
+    public Vector3D CalculateForce(OrbitalBody orbitalBody)
+    {
+        Vector3D direction = (orbitalBody.orbitalData.position - orbitalData.position).normilized;
+        double force = NBodySimulation.G * (planetaryData.mass * orbitalBody.planetaryData.mass / (Vector3D.Distance(orbitalData.position, orbitalBody.orbitalData.position) * Vector3D.Distance(orbitalData.position, orbitalBody.orbitalData.position)));
+        return force * direction;
+    }
 
     //public void ApplyForces()
     //{
@@ -92,13 +169,13 @@ public struct OrbitalData
 [System.Serializable]
 public struct PlanetaryData
 {
-    public string name;
+    //public string name;
     public double radius;
     public double mass;
 
     public PlanetaryData(OrbitalBodySO so)
     {
-        name = so.name;
+        //name = so.name;
         radius = so.radius;
         mass = so.mass;
     }

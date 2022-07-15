@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &360989180
 Transform:
   m_ObjectHideFlags: 0
@@ -694,30 +694,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 687dd56c209080d4bb426e4c5c57a4f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useJobs: 0
+  n: 1000
+  useJobs: 1
+  Prefab: {fileID: 1930105518}
   orbitalBodiesSO:
   - {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: c03e6116eba429243bda3048b0959bff, type: 2}
+  - {fileID: 11400000, guid: 872a28ea6f356a344abf97af83b15383, type: 2}
+  - {fileID: 11400000, guid: 4d5466c9bb38b444b9f526acc12882d8, type: 2}
+  - {fileID: 11400000, guid: af9f4a4139344fe4080d29b40deb37e6, type: 2}
+  - {fileID: 11400000, guid: bb174619a0699ec45920dc28a10a82dc, type: 2}
+  - {fileID: 11400000, guid: 76c3980eab639a0409604c9cf4011de7, type: 2}
+  - {fileID: 11400000, guid: ce6c4d20c35525c47a659eb366eb4164, type: 2}
   orbitalBodyObjects:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 1829556139}
+  - {fileID: 1433479584}
+  - {fileID: 632821521}
+  - {fileID: 1930105518}
+  - {fileID: 551623800}
+  - {fileID: 499814399}
+  - {fileID: 1239774854}
+  - {fileID: 1899180616}
   drawScale: 5e+9
-  lossLessTimeScale: 1000
-  lossyTimeScale: 10000
+  lossLessTimeScale: 1
+  lossyTimeScale: 1000
 --- !u!1 &1239774854
 GameObject:
   m_ObjectHideFlags: 0
