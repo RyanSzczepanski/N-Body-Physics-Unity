@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e42f7ecc75b795d46a19e4203305a38e, type: 3}
+  m_Name: Mars
+  m_EditorClassIdentifier: 
+  planetName: Mars
+  mass: 6.4169e+23
+  radius: 3389500
+  orbitalParent: {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
+  orbitalRadius: 227943820000
+  orbitalVelocity: 24077
+  inclination: 1.8
+  eccentricity: 0.0933941
