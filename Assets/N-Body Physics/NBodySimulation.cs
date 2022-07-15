@@ -37,6 +37,7 @@ public class NBodySimulation : MonoBehaviour
                 index = i,
             };
         }
+        if (n == 0) { return; }
         CreateNBodies(n);
     }
 

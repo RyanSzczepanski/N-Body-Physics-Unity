@@ -647,7 +647,7 @@ MonoBehaviour:
   zoom: 0.2
   alt: 1
   distance: 0
-  target: {fileID: 1930105522}
+  target: {fileID: 0}
   cameraL: {fileID: 963194225}
   cameraS: {fileID: 0}
 --- !u!1 &992861931
@@ -695,7 +695,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   n: 1000
-  useJobs: 1
+  useBurstCompiler: 1
   Prefab: {fileID: 1930105518}
   orbitalBodiesSO:
   - {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
