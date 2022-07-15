@@ -695,119 +695,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   useJobs: 0
-  orbitalBodies:
-  - orbitalBodyData: {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
-    position:
-      x: 0
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 0
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 1829556143}
-  - orbitalBodyData: {fileID: 11400000, guid: c03e6116eba429243bda3048b0959bff, type: 2}
-    position:
-      x: 57909227000
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 47360
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 1433479588}
-  - orbitalBodyData: {fileID: 11400000, guid: 872a28ea6f356a344abf97af83b15383, type: 2}
-    position:
-      x: 108880000000
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 35020
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 632821525}
-  - orbitalBodyData: {fileID: 11400000, guid: 4d5466c9bb38b444b9f526acc12882d8, type: 2}
-    position:
-      x: 151660000000
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 29780
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 1930105522}
-  - orbitalBodyData: {fileID: 11400000, guid: af9f4a4139344fe4080d29b40deb37e6, type: 2}
-    position:
-      x: 152044400000
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 30802
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 551623804}
-  - orbitalBodyData: {fileID: 11400000, guid: bb174619a0699ec45920dc28a10a82dc, type: 2}
-    position:
-      x: 208370000000
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 29783
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 499814403}
-  - orbitalBodyData: {fileID: 11400000, guid: 76c3980eab639a0409604c9cf4011de7, type: 2}
-    position:
-      x: 208370000000
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 29783
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 1239774858}
-  - orbitalBodyData: {fileID: 11400000, guid: ce6c4d20c35525c47a659eb366eb4164, type: 2}
-    position:
-      x: 208370000000
-      y: 0
-      z: 0
-    currentVelocityVector:
-      x: 0
-      y: 0
-      z: 29783
-    nextForceVector:
-      x: 0
-      y: 0
-      z: 0
-    body: {fileID: 1899180620}
+  orbitalBodiesSO:
+  - {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  orbitalBodyObjects:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   drawScale: 5e+9
   lossLessTimeScale: 1000
   lossyTimeScale: 10000

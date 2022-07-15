@@ -8,9 +8,12 @@ using UnityEngine;
 
 public class NBodySimulation : MonoBehaviour
 {
-    public bool useJobs;
+    public const double G = 0.00000000006673;
 
-    public OrbitalBody[] orbitalBodies;
+    public bool useJobs;
+    public OrbitalBodySO[] orbitalBodiesSO;
+    [SerializeField] private OrbitalBody[] orbitalBodies;
+    public GameObject[] orbitalBodyObjects;
     public float drawScale;
     public float lossLessTimeScale;
     public float lossyTimeScale;
@@ -19,9 +22,10 @@ public class NBodySimulation : MonoBehaviour
     private void Awake()
     {
         Application.targetFrameRate = -1;
-        foreach (OrbitalBody orbitalBody in orbitalBodies)
+        orbitalBodies = new OrbitalBody[orbitalBodiesSO.Length];
+        for (int i = 0; i < orbitalBodiesSO.Length; i++)
         {
-            orbitalBody.Initialize();
+            orbitalBodies[i] = new OrbitalBody(orbitalBodiesSO[i], i);
         }
     }
 
@@ -35,17 +39,24 @@ public class NBodySimulation : MonoBehaviour
         for (int i = 0; i < lossLessTimeScale; i++)
             UpdateSystem();
 
-        foreach (OrbitalBody orbitalBody in orbitalBodies)
-            orbitalBody.Draw(drawScale);
+        for (int i = 0; i < orbitalBodies.Length; i++)
+            DrawBody(i);
     }
 
     private void UpdateSystem()
     {
-        foreach (OrbitalBody orbitalBody in orbitalBodies)
-            orbitalBody.CalculateForces(orbitalBodies, useJobs);
+        for (int i = 0; i < orbitalBodies.Length; i++)
+            orbitalBodies[i].CalculateForces(orbitalBodies, useJobs);
+        //foreach (OrbitalBody orbitalBody in orbitalBodies)
+        //    orbitalBody.CalculateForces(orbitalBodies, useJobs);
 
-        foreach (OrbitalBody orbitalBody in orbitalBodies)
-            orbitalBody.ApplyForces(lossyTimeScale * Time.deltaTime);
+        for (int i = 0; i < orbitalBodies.Length; i++)
+            orbitalBodies[i].ApplyForces(lossyTimeScale * Time.deltaTime);
 
+    }
+
+    private void DrawBody(int i)
+    {
+        orbitalBodyObjects[i].transform.position = (orbitalBodies[i].orbitalData.position / drawScale).ToVector3();
     }
 }

@@ -8,7 +8,9 @@ public class OrbitalBodySO : ScriptableObject
     public string planetName;
     public double mass;
     public double radius;
+
     public OrbitalBodySO orbitalParent;
+
     public double orbitalRadius;
     public double orbitalVelocity;
     public double inclination;
