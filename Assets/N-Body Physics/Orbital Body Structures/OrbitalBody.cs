@@ -36,25 +36,6 @@ public struct OrbitalBody
         nextForceVector = force;
     }
 
-    //Calculates all the forces that this body experiences from every other body
-    public void CalculateForcesJob(NativeArray<OrbitalBody> orbitalBodies)
-    {
-        NativeArray<Vector3D> forceOut = new NativeArray<Vector3D>(1, Allocator.TempJob);
-
-        CalculateForcesJob calculateForceJob = new CalculateForcesJob()
-        {
-            output = forceOut,
-            orbitalBodies = orbitalBodies,
-            originBodyIndex = index,
-        };
-        JobHandle jobHandle = calculateForceJob.Schedule(orbitalBodies.Length, 1);
-        jobHandle.Complete();
-
-        nextForceVector = calculateForceJob.output[0];
-
-        forceOut.Dispose();
-    }
-
     //Applies the calculated force
     //Seperate function so you can caluclate the force that every body experiences and then update the bodies position after all forces have been calculated
     public void ApplyForces(float time)
@@ -63,25 +44,5 @@ public struct OrbitalBody
         //Using Normilized NextForceVector to turn it into Vector from Scalar
         orbitalData.velocity += acceleration * time * nextForceVector.normilized;
         orbitalData.position += orbitalData.velocity * time;
-    }
-}
-
-
-//JOB
-//Calculates all the forces that this body experiences from every other body
-[BurstCompile(CompileSynchronously = false)]
-public struct CalculateForcesJob : IJobParallelFor
-{
-    [NativeDisableParallelForRestriction]
-    public NativeArray<Vector3D> output;
-    [NativeDisableParallelForRestriction]
-    public NativeArray<OrbitalBody> orbitalBodies;
-    public int originBodyIndex;
-
-    public void Execute(int index)
-    {
-        //Gaurd Clause: dont calcualte for of an object on its self
-        if (originBodyIndex == index) { return; }
-        output[0] += NBodyPhysics.CalculateForceOfGravity(orbitalBodies[originBodyIndex].orbitalData.position, orbitalBodies[originBodyIndex].planetaryData.mass, orbitalBodies[index].orbitalData.position, orbitalBodies[index].planetaryData.mass);
     }
 }

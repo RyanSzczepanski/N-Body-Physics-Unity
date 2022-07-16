@@ -17,16 +17,15 @@ public class NBodySimulation : MonoBehaviour
     public GameObject Prefab;
 
     public OrbitalBodySO[] orbitalBodiesSO;
-    private NativeArray<OrbitalBody> orbitalBodies;
     public GameObject[] orbitalBodyObjects;
+
+    private NativeArray<OrbitalBody> orbitalBodies;
     public float drawScale;
     public int lossLessTimeScale;
     public int lossyTimeScale;
-    JobHandle jobHandle;
 
     private void Awake()
     {
-        Application.targetFrameRate = -1;
         orbitalBodies = new NativeArray<OrbitalBody>(orbitalBodiesSO.Length, Allocator.Persistent);
         for (int i = 0; i < orbitalBodiesSO.Length; i++)
         {
@@ -37,13 +36,9 @@ public class NBodySimulation : MonoBehaviour
                 index = i,
             };
         }
-        if (n == 0) { return; }
-        CreateNBodies(n);
-    }
 
-    private void Start()
-    {
-
+        if (n <= 0) { return; }
+            CreateNBodies(n);
     }
 
     private void Update()
@@ -66,6 +61,7 @@ public class NBodySimulation : MonoBehaviour
     private void CreateNBodies(int n)
     {
         float dist = 10000000000;
+        orbitalBodies.Dispose();
         orbitalBodies = new NativeArray<OrbitalBody>(n, Allocator.Persistent);
         orbitalBodyObjects = new GameObject[n];
         for (int i = 0; i < n; i++)
@@ -158,7 +154,7 @@ public class NBodySimulation : MonoBehaviour
         else if (optimizationMethod == Optimization.BurstAndParallelForceCalculations)
         {
             NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
-            NativeArray<JobHandle> calculateAllForcesJJobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
+            NativeArray<JobHandle> calculateAllForcesJJobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.Temp);
 
             var calculateAllForcesJob = new CalculateAllForcesJob()
             {
