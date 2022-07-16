@@ -11,7 +11,7 @@ public class NBodySimulation : MonoBehaviour
 
     public int n;
 
-    public bool useBurstCompiler;
+    public Optimization optimization;
     //public bool useBurst;
 
     public GameObject Prefab;
@@ -48,24 +48,40 @@ public class NBodySimulation : MonoBehaviour
 
     private void Update()
     {
-        if (useBurstCompiler)
-        {
-            //Doesnt Work In Parallel
-            var job = new UpdateSystem()
-            {
-                time = lossyTimeScale * Time.deltaTime,
-                orbitalBodies = orbitalBodies,
-            };
-            JobHandle jobHandle = new JobHandle();
-            jobHandle = job.ScheduleParallel(lossLessTimeScale, lossLessTimeScale, new JobHandle());
-            jobHandle.Complete();
-        }
-        else
-        {
-            for (int i = 0; i < lossLessTimeScale; i++)
-                UpdateSystem();
-        }
+        UpdateSystem(optimization);
+        //if (optimization == Optimization.Burst)
+        //{
+        //    //Cant Run Out Of Order
+            
+        //}
+        //else if (optimization == Optimization.ParallelForceCalculations)
+        //{
+        //    for (int i = 0; i < lossLessTimeScale; i++)
+        //    {
+        //        var job = new UpdateSystemJob()
+        //        {
+        //            time = lossyTimeScale * Time.deltaTime,
+        //            orbitalBodies = orbitalBodies,
+        //        };
+        //        job.UpdateSystemParallel();
+        //    }
+        //}
+        //else if (optimization == Optimization.BurstAndParallelForceCalculations)
+        //{
 
+        //}
+        //else if (optimization == Optimization.None)
+        //{
+        //    var job = new UpdateSystemJob()
+        //    {
+        //        time = lossyTimeScale * Time.deltaTime,
+        //        orbitalBodies = orbitalBodies,
+        //    };
+        //    for(int i = 0; i < lossLessTimeScale; i++)
+        //    {
+        //        job.UpdateSystem(); 
+        //    }
+        //}
         for (int i = 0; i < orbitalBodies.Length; i++)
             DrawBody(i);
     }
@@ -73,24 +89,6 @@ public class NBodySimulation : MonoBehaviour
     private void EndSimulation()
     {
         orbitalBodies.Dispose();
-    }
-
-    private void UpdateSystem()
-    {
-        for (int i = 0; i < orbitalBodies.Length; i++)
-        {
-            var orbitalBody = orbitalBodies[i];
-            orbitalBody.CalculateForces(orbitalBodies);
-            orbitalBodies[i] = orbitalBody;
-        }
-            
-
-        for (int i = 0; i < orbitalBodies.Length; i++)
-        {
-            var orbitalBody = orbitalBodies[i];
-            orbitalBody.ApplyForces(lossyTimeScale * Time.deltaTime);
-            orbitalBodies[i] = orbitalBody;
-        }
     }
 
     private void DrawBody(int i)
@@ -117,33 +115,123 @@ public class NBodySimulation : MonoBehaviour
             orbitalBodyObjects[i].name = $"Planet {i}";
         }
     }
+
+    private void UpdateSystem(Optimization optimizationMethod)
+    {
+        //Optimazation None - Not good for anything
+        if (optimizationMethod == Optimization.None)
+        {
+            for (int i = 0; i < lossLessTimeScale; i++)
+            {
+                for (int j = 0; j < orbitalBodies.Length; j++)
+                {
+                    var orbitalBody = orbitalBodies[j];
+                    orbitalBody.CalculateForces(orbitalBodies);
+                    orbitalBodies[j] = orbitalBody;
+                }
+
+                for (int j = 0; j < orbitalBodies.Length; j++)
+                {
+                    var orbitalBody = orbitalBodies[j];
+                    orbitalBody.ApplyForces(lossyTimeScale * Time.deltaTime);
+                    orbitalBodies[j] = orbitalBody;
+                }
+            }
+        }
+
+        //Optimazation Burst - Good for high time scales
+        else if (optimizationMethod == Optimization.Burst)
+        {
+            NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
+            var job = new UpdateSystemBurstJob()
+            {
+                time = lossyTimeScale * Time.deltaTime,
+                orbitalBodies = orbitalBodies,
+            };
+            for (int i = 0; i < lossLessTimeScale; i++)
+            {
+                if (i == 0)
+                {
+                    jobHandles[i] = job.Schedule(new JobHandle());
+                }
+                else
+                {
+                    jobHandles[i] = job.Schedule(jobHandles[i - 1]);
+                }
+            }
+            JobHandle.CompleteAll(jobHandles);
+            jobHandles.Dispose();
+        }
+
+        //Optimazation Parallel Force Calculations - Good for high body counts
+        else if (optimizationMethod == Optimization.ParallelForceCalculations)
+        {
+            var job = new CalculateAllForcesJob()
+            {
+                orbitalBodies = orbitalBodies,
+            };
+            for (int i = 0; i < lossLessTimeScale; i++)
+            {
+                JobHandle jobHandle = job.Schedule(orbitalBodies.Length, 1);
+                jobHandle.Complete();
+
+                for (int j = 0; j < orbitalBodies.Length; j++)
+                {
+                    var orbitalBody = orbitalBodies[j];
+                    orbitalBody.ApplyForces(lossyTimeScale * Time.deltaTime);
+                    orbitalBodies[j] = orbitalBody;
+                }
+            }
+        }
+
+        //Optimazation Parallel Force Calculations & Burst - Good for everything?
+        else if (optimizationMethod == Optimization.BurstAndParallelForceCalculations)
+        {
+            NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
+            NativeArray<JobHandle> calculateAllForcesJJobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
+
+            var calculateAllForcesJob = new CalculateAllForcesJob()
+            {
+                orbitalBodies = orbitalBodies,
+            };
+
+            var job = new UpdateSystemBurstAndAllForcesJob()
+            {
+                time = lossyTimeScale * Time.deltaTime,
+                orbitalBodies = orbitalBodies,
+            };
+
+            for (int i = 0; i < lossLessTimeScale; i++)
+            {
+                if (i == 0)
+                {
+                    calculateAllForcesJJobHandles[i] = calculateAllForcesJob.Schedule(orbitalBodies.Length, 1);
+                }
+                else
+                {
+                    calculateAllForcesJJobHandles[i] = calculateAllForcesJob.Schedule(orbitalBodies.Length, 1, jobHandles[i - 1]);
+                }
+                jobHandles[i] = job.Schedule(calculateAllForcesJJobHandles[i]);
+            }
+            JobHandle.CompleteAll(jobHandles);
+            jobHandles.Dispose();
+        }
+    }
 }
 
-[BurstCompile(CompileSynchronously = true)]
-public struct UpdateSystem : IJobFor
+//JOB
+[BurstCompile(CompileSynchronously = false)]
+public struct UpdateSystemBurstJob : IJob
 {
     [NativeDisableParallelForRestriction]
     public NativeArray<OrbitalBody> orbitalBodies;
     public float time;
-    public void Execute(int Index)
+    public void Execute()
     {
-        for (int i = 0; i < orbitalBodies.Length; i++)
-        {
-            var orbitalBody = orbitalBodies[i];
-            orbitalBody.CalculateForces(orbitalBodies);
-            orbitalBodies[i] = orbitalBody;
-        }
-            
-        
-        for (int i = 0; i < orbitalBodies.Length; i++)
-        {
-            var orbitalBody = orbitalBodies[i];
-            orbitalBody.ApplyForces(time);
-            orbitalBodies[i] = orbitalBody;
-        }        
+        UpdateSystem();
     }
 
-    public void UpdateSystemFrame()
+    public void UpdateSystem()
     {
         for (int i = 0; i < orbitalBodies.Length; i++)
         {
@@ -152,7 +240,6 @@ public struct UpdateSystem : IJobFor
             orbitalBodies[i] = orbitalBody;
         }
 
-
         for (int i = 0; i < orbitalBodies.Length; i++)
         {
             var orbitalBody = orbitalBodies[i];
@@ -160,4 +247,44 @@ public struct UpdateSystem : IJobFor
             orbitalBodies[i] = orbitalBody;
         }
     }
+}
+
+//JOB
+[BurstCompile(CompileSynchronously = false)]
+public struct CalculateAllForcesJob : IJobParallelFor
+{
+    [NativeDisableParallelForRestriction]
+    public NativeArray<OrbitalBody> orbitalBodies;
+    public void Execute(int index)
+    {
+        var orbitalBody = orbitalBodies[index];
+        orbitalBody.CalculateForces(orbitalBodies);
+        orbitalBodies[index] = orbitalBody;
+    }
+}
+
+//JOB
+[BurstCompile(CompileSynchronously = false)]
+public struct UpdateSystemBurstAndAllForcesJob : IJob
+{
+    [NativeDisableParallelForRestriction]
+    public NativeArray<OrbitalBody> orbitalBodies;
+    public float time;
+    public void Execute()
+    {
+        for (int i = 0; i < orbitalBodies.Length; i++)
+        {
+            var orbitalBody = orbitalBodies[i];
+            orbitalBody.ApplyForces(time);
+            orbitalBodies[i] = orbitalBody;
+        }
+    }
+}
+
+public enum Optimization
+{
+    None,
+    Burst,
+    ParallelForceCalculations,
+    BurstAndParallelForceCalculations
 }

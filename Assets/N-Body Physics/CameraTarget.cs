@@ -7,21 +7,18 @@ public class CameraTarget : MonoBehaviour
     [Range(0.001f, 10f)]
     public float zoom;
     public float alt = 0;
-    public float distance = 6471000;
 
-    //public MultiScaleObjectManager target;
     public Transform target;
-    public GameObject cameraL;
-    public GameObject cameraS;
+    public GameObject cameraObj;
 
     private void LateUpdate()
     {
+        if(target == null) { return; }
         UpdateCameraPos();
-        //MultiScaleWorld.instance.AlignCamera();
 
-        if (cameraL.GetComponent<Camera>().orthographicSize != zoom)
+        if (cameraObj.GetComponent<Camera>().orthographicSize != zoom)
         {
-            cameraL.GetComponent<Camera>().orthographicSize = zoom;
+            cameraObj.GetComponent<Camera>().orthographicSize = zoom;
         }
     }
 

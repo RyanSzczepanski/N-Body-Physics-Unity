@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &360989180
 Transform:
   m_ObjectHideFlags: 0
@@ -646,10 +646,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   zoom: 0.2
   alt: 1
-  distance: 0
-  target: {fileID: 0}
-  cameraL: {fileID: 963194225}
-  cameraS: {fileID: 0}
+  target: {fileID: 1930105522}
+  cameraObj: {fileID: 963194225}
 --- !u!1 &992861931
 GameObject:
   m_ObjectHideFlags: 0
@@ -694,8 +692,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 687dd56c209080d4bb426e4c5c57a4f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  n: 1000
-  useBurstCompiler: 1
+  n: 0
+  optimization: 3
   Prefab: {fileID: 1930105518}
   orbitalBodiesSO:
   - {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
@@ -716,7 +714,7 @@ MonoBehaviour:
   - {fileID: 1239774854}
   - {fileID: 1899180616}
   drawScale: 5e+9
-  lossLessTimeScale: 1
+  lossLessTimeScale: 1000
   lossyTimeScale: 1000
 --- !u!1 &1239774854
 GameObject:
