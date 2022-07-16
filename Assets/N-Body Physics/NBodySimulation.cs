@@ -49,39 +49,6 @@ public class NBodySimulation : MonoBehaviour
     private void Update()
     {
         UpdateSystem(optimization);
-        //if (optimization == Optimization.Burst)
-        //{
-        //    //Cant Run Out Of Order
-            
-        //}
-        //else if (optimization == Optimization.ParallelForceCalculations)
-        //{
-        //    for (int i = 0; i < lossLessTimeScale; i++)
-        //    {
-        //        var job = new UpdateSystemJob()
-        //        {
-        //            time = lossyTimeScale * Time.deltaTime,
-        //            orbitalBodies = orbitalBodies,
-        //        };
-        //        job.UpdateSystemParallel();
-        //    }
-        //}
-        //else if (optimization == Optimization.BurstAndParallelForceCalculations)
-        //{
-
-        //}
-        //else if (optimization == Optimization.None)
-        //{
-        //    var job = new UpdateSystemJob()
-        //    {
-        //        time = lossyTimeScale * Time.deltaTime,
-        //        orbitalBodies = orbitalBodies,
-        //    };
-        //    for(int i = 0; i < lossLessTimeScale; i++)
-        //    {
-        //        job.UpdateSystem(); 
-        //    }
-        //}
         for (int i = 0; i < orbitalBodies.Length; i++)
             DrawBody(i);
     }
@@ -107,7 +74,10 @@ public class NBodySimulation : MonoBehaviour
             {
                 orbitalData = new OrbitalData(orbitalBodiesSO[0])
                 {
+                    //Cube
                     position = new Vector3D(Random.Range(-dist, dist), Random.Range(-dist, dist), Random.Range(-dist, dist)),
+                    //Sphere
+                    //position = new Vector3D(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normilized * Random.Range(-dist, dist),
                     velocity = Vector3D.zero,
                 },
             };
@@ -184,7 +154,7 @@ public class NBodySimulation : MonoBehaviour
             }
         }
 
-        //Optimazation Parallel Force Calculations & Burst - Good for everything?
+        //Optimazation Parallel Force Calculations & Burst - Good balance for high body counts if using time scale but can be beat by just burst at low body counts?
         else if (optimizationMethod == Optimization.BurstAndParallelForceCalculations)
         {
             NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
@@ -195,7 +165,7 @@ public class NBodySimulation : MonoBehaviour
                 orbitalBodies = orbitalBodies,
             };
 
-            var job = new UpdateSystemBurstAndAllForcesJob()
+            var job = new ApplyFrocesJob()
             {
                 time = lossyTimeScale * Time.deltaTime,
                 orbitalBodies = orbitalBodies,
@@ -265,7 +235,7 @@ public struct CalculateAllForcesJob : IJobParallelFor
 
 //JOB
 [BurstCompile(CompileSynchronously = false)]
-public struct UpdateSystemBurstAndAllForcesJob : IJob
+public struct ApplyFrocesJob : IJob
 {
     [NativeDisableParallelForRestriction]
     public NativeArray<OrbitalBody> orbitalBodies;
