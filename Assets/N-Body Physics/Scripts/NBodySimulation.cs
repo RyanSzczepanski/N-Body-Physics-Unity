@@ -19,6 +19,8 @@ public class NBodySimulation : MonoBehaviour
     public int lossLessTimeScale;
     public int lossyTimeScale;
 
+    public Octree octree;
+
     private void Awake()
     {
         orbitalBodies = new NativeArray<OrbitalBody>(orbitalBodiesSO.Length, Allocator.Persistent);
@@ -32,8 +34,12 @@ public class NBodySimulation : MonoBehaviour
             };
         }
 
-        if (numberOfBodies <= 0) { return; }
+        if (numberOfBodies > 0)
+        {
             CreateNBodies(numberOfBodies);
+        }
+        octree = new Octree();
+        octree.Init(orbitalBodies.Length);
     }
 
     private void Update()
@@ -177,6 +183,10 @@ public class NBodySimulation : MonoBehaviour
             JobHandle.CompleteAll(jobHandles);
             jobHandles.Dispose();
         }
+        else if (optimizationMethod == Optimization.BarnesHut)
+        {
+            octree.GenerateTree(new NativeArray<OrbitalBody>(orbitalBodies, Allocator.TempJob));
+        }
     }
 }
 
@@ -247,5 +257,6 @@ public enum Optimization
     None,
     Burst,
     ParallelForceCalculations,
-    BurstAndParallelForceCalculations
+    BurstAndParallelForceCalculations,
+    BarnesHut,
 }
