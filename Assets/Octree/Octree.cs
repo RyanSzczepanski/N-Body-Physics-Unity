@@ -43,14 +43,14 @@ public struct Octree
         NativeArray<int> nodesWithPlanets = new NativeArray<int>(data.Length, Allocator.TempJob);
         BarnesHut barnesHut = new BarnesHut()
         {
-            nodesWithPlanets = nodesWithPlanets,
+            occupiedNodes = nodesWithPlanets,
             bodies = data,
             nodes = newNodes,
         };
 
         JobHandle jobHandle = barnesHut.Schedule();
         jobHandle.Complete();
-        this.nodesWithPlanets.CopyFrom(barnesHut.nodesWithPlanets);
+        this.nodesWithPlanets.CopyFrom(barnesHut.occupiedNodes);
         nodes.CopyFrom(barnesHut.nodes);
         newNodes.Dispose();
         nodesWithPlanets.Dispose();
@@ -58,7 +58,7 @@ public struct Octree
 
         for(int i = 0; i < this.nodesWithPlanets.Length; i++)
         {
-            Debug.Log(this.nodesWithPlanets[i]);
+            //Debug.Log(this.nodesWithPlanets[i]);
         }
 
         debugArray = nodes.ToArray();

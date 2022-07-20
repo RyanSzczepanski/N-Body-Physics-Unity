@@ -182,6 +182,7 @@ public class NBodySimulation : MonoBehaviour
             }
             JobHandle.CompleteAll(jobHandles);
             jobHandles.Dispose();
+            octree.GenerateTree(new NativeArray<OrbitalBody>(orbitalBodies, Allocator.TempJob));
         }
         else if (optimizationMethod == Optimization.BarnesHut)
         {

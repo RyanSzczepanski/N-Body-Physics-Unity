@@ -11,7 +11,7 @@ public struct BarnesHut : IJob
 {
     public NativeArray<OrbitalBody> bodies;
     public NativeList<Node<NBodyNodeData>> nodes;
-    public NativeArray<int> nodesWithPlanets;
+    public NativeArray<int> occupiedNodes;
 
     public void Execute()
     {
@@ -44,8 +44,8 @@ public struct BarnesHut : IJob
         //If node has a planet bump both down a layer
         if (currentNode.data.hasPlanet)
         {
-            OrbitalBody existingPlanet = currentNode.data.orbitalBody;
-            int existingPlanetIndex = nodesWithPlanets.IndexOf(currentNode.index);
+            OrbitalBody existingOccupiedNode = currentNode.data.orbitalBody;
+            int existingOccupiedNodeIndex = occupiedNodes.IndexOf(currentNode.index);
             currentNode.data.hasPlanet = false;
             
             //Generates all children
@@ -59,15 +59,15 @@ public struct BarnesHut : IJob
             //Needs to jump in and update node before decending
             currentNode.data.centerOfMass = (currentNode.data.mass * currentNode.data.centerOfMass + body.planetaryData.mass * body.orbitalData.position) / (currentNode.data.mass * body.planetaryData.mass);
             currentNode.data.mass += body.planetaryData.mass;
-            //Bumps existing planet down a node
             nodes[searchNodeIndex] = currentNode;
-            Recursive(existingPlanetIndex, existingPlanet, currentNode.nodeChildren.GetChildIndex(currentNode.spacialData.GetChildOctantsIndex(existingPlanet.orbitalData.position)));
+            //Bumps existing planet down a node
+            Recursive(existingOccupiedNodeIndex, existingOccupiedNode, currentNode.nodeChildren.GetChildIndex(currentNode.spacialData.GetChildOctantsIndex(existingOccupiedNode.orbitalData.position)));
             //Continues the search for a node
             Recursive(i, body, currentNode.nodeChildren.GetChildIndex(currentNode.spacialData.GetChildOctantsIndex(body.orbitalData.position)));
             return;
         }
         //Found node and adds planet
-        nodesWithPlanets[i] = currentNode.index;
+        occupiedNodes[i] = currentNode.index;
         currentNode.data.hasPlanet = true;
         currentNode.data.orbitalBody = body;
 
