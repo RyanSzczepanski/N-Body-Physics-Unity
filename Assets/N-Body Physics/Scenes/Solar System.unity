@@ -692,9 +692,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 687dd56c209080d4bb426e4c5c57a4f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  n: 5000
+  numberOfBodies: 0
   optimization: 3
-  Prefab: {fileID: 1930105518}
+  Prefab: {fileID: 2460340628513759752, guid: 16da0dd30b2e58c47ad6cb588635cecb, type: 3}
   orbitalBodiesSO:
   - {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
   - {fileID: 11400000, guid: c03e6116eba429243bda3048b0959bff, type: 2}
@@ -714,8 +714,8 @@ MonoBehaviour:
   - {fileID: 1239774854}
   - {fileID: 1899180616}
   drawScale: 5e+9
-  lossLessTimeScale: 1
-  lossyTimeScale: 1000
+  lossLessTimeScale: 1000
+  lossyTimeScale: 1
 --- !u!1 &1239774854
 GameObject:
   m_ObjectHideFlags: 0

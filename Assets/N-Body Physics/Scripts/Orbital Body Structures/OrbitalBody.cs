@@ -1,11 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Unity.Burst;
 using Unity.Collections;
-using Unity.Jobs;
-using UnityEngine;
-
 
 [System.Serializable]
 public struct OrbitalBody

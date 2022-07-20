@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
@@ -7,19 +5,16 @@ using Unity.Burst;
 
 public class NBodySimulation : MonoBehaviour
 {
-    public const double G = 0.00000000006673;
-
-    public int n;
+    public int numberOfBodies;
 
     public Optimization optimization;
-    //public bool useBurst;
 
     public GameObject Prefab;
 
     public OrbitalBodySO[] orbitalBodiesSO;
     public GameObject[] orbitalBodyObjects;
-
     private NativeArray<OrbitalBody> orbitalBodies;
+
     public float drawScale;
     public int lossLessTimeScale;
     public int lossyTimeScale;
@@ -37,8 +32,8 @@ public class NBodySimulation : MonoBehaviour
             };
         }
 
-        if (n <= 0) { return; }
-            CreateNBodies(n);
+        if (numberOfBodies <= 0) { return; }
+            CreateNBodies(numberOfBodies);
     }
 
     private void Update()
