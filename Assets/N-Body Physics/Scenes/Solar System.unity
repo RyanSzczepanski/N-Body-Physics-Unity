@@ -693,8 +693,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numberOfBodies: 100
-  optimization: 3
-  Prefab: {fileID: 2460340628513759752, guid: 16da0dd30b2e58c47ad6cb588635cecb, type: 3}
+  optimization: 2
+  Prefab: {fileID: 6372942782273505136, guid: ec16db605f69fcb46b48d2fc89433c21, type: 3}
   orbitalBodiesSO:
   - {fileID: 11400000, guid: c2f23ca6b9c46ce4e85216d0899a132f, type: 2}
   - {fileID: 11400000, guid: c03e6116eba429243bda3048b0959bff, type: 2}
@@ -714,7 +714,7 @@ MonoBehaviour:
   - {fileID: 1239774854}
   - {fileID: 1899180616}
   drawScale: 5e+9
-  lossLessTimeScale: 1000
+  lossLessTimeScale: 1
   lossyTimeScale: 1
   octree:
     debugArray: []

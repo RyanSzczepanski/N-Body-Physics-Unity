@@ -9,23 +9,19 @@ using UnityEngine;
 public struct Octree
 {
     public NativeList<Node<NBodyNodeData>> nodes;
-    public NativeArray<int> nodesWithPlanets;
+    //public NativeArray<int> nodesWithPlanets;
     public NativeList<Node<NBodyNodeData>> newNodes;
 
     public Node<NBodyNodeData>[] debugArray;
-
-    //public NativeArray<OrbitalBody> data;
-
     public void Init(int size)
     {
         nodes = new NativeList<Node<NBodyNodeData>>(0, Allocator.Persistent);
-        nodesWithPlanets = new NativeArray<int>(size, Allocator.Persistent);
+        //nodesWithPlanets = new NativeArray<int>(size, Allocator.Persistent);
     }
 
     private void PreWork()
     {
         newNodes = new NativeList<Node<NBodyNodeData>>(0, Allocator.TempJob);
-
         newNodes.Add(Node<NBodyNodeData>.CreateNewNode(
             new NBodyNodeData(),
             new SpacialOctreeData()
@@ -40,29 +36,33 @@ public struct Octree
     public void GenerateTree(NativeArray<OrbitalBody> data)
     {
         PreWork();
-        NativeArray<int> nodesWithPlanets = new NativeArray<int>(data.Length, Allocator.TempJob);
+
         BarnesHut barnesHut = new BarnesHut()
         {
-            occupiedNodes = nodesWithPlanets,
             bodies = data,
             nodes = newNodes,
         };
 
         JobHandle jobHandle = barnesHut.Schedule();
+
         jobHandle.Complete();
-        this.nodesWithPlanets.CopyFrom(barnesHut.occupiedNodes);
         nodes.CopyFrom(barnesHut.nodes);
+
         newNodes.Dispose();
-        nodesWithPlanets.Dispose();
-        data.Dispose();
+    }
 
-        for(int i = 0; i < this.nodesWithPlanets.Length; i++)
+    public JobHandle GenerateTreeJob(NativeArray<OrbitalBody> data, JobHandle dependecy)
+    {
+        PreWork();
+
+        BarnesHut barnesHut = new BarnesHut()
         {
-            //Debug.Log(this.nodesWithPlanets[i]);
-        }
+            bodies = data,
+            nodes = nodes,
+        };
 
-        debugArray = nodes.ToArray();
-        Draw(-1);
+        JobHandle jobHandle = barnesHut.Schedule(dependecy);
+        return jobHandle;
     }
 
     public void Draw(int drawDepth)

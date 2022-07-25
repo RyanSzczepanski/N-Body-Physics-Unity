@@ -139,7 +139,6 @@ public class OrbitalBodySO : ScriptableObject
                 }
             }
         }
-        Debug.Log("uh oh");
         return 0;
     }
 }

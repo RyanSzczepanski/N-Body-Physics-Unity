@@ -10,25 +10,25 @@ public class DebugRenderer
     static int count = 0;
     static List<GameObject> gameObjects = new List<GameObject>();
 
-    static Mesh mesh = new Mesh();
+    //static Mesh mesh = new Mesh();
 
 
-    public static void CreateMesh()
-    {
-        mesh.name = "Bounds";
-        Vector3[] vertices = new Vector3[8] {
-            new Vector3(2, 2, 2), new Vector3(2, 2, -2), new Vector3(2, -2, 2), new Vector3(2, -2, -2),
-            new Vector3(-2, 2, 2), new Vector3(-2, 2, -2), new Vector3(-2, -2, 2), new Vector3(-2, -2, -2),
-        };
-        mesh.vertices = vertices;
+    //public static void CreateMesh()
+    //{
+    //    mesh.name = "Bounds";
+    //    Vector3[] vertices = new Vector3[8] {
+    //        new Vector3(2, 2, 2), new Vector3(2, 2, -2), new Vector3(2, -2, 2), new Vector3(2, -2, -2),
+    //        new Vector3(-2, 2, 2), new Vector3(-2, 2, -2), new Vector3(-2, -2, 2), new Vector3(-2, -2, -2),
+    //    };
+    //    mesh.vertices = vertices;
 
-        int[] cube = new int[] {
-            0, 1, 0, 2, 3, 1, 3, 2,
-            4, 5, 4, 6, 7, 5, 7, 6,
-            0, 4, 1, 5, 2, 6, 3, 7,
-        };
-        mesh.SetIndices(cube, MeshTopology.Lines, 0, true);
-    }
+    //    int[] cube = new int[] {
+    //        0, 1, 0, 2, 3, 1, 3, 2,
+    //        4, 5, 4, 6, 7, 5, 7, 6,
+    //        0, 4, 1, 5, 2, 6, 3, 7,
+    //    };
+    //    mesh.SetIndices(cube, MeshTopology.Lines, 0, true);
+    //}
 
     public static void DoDraw(bool doDraw)
     {
@@ -58,8 +58,6 @@ public class DebugRenderer
         Debug.DrawLine((center + SpacialOctreeData.GetOffsetVector(2) * radius).ToVector3(), (center + SpacialOctreeData.GetOffsetVector(6) * radius).ToVector3(), color, time);
         Debug.DrawLine((center + SpacialOctreeData.GetOffsetVector(3) * radius).ToVector3(), (center + SpacialOctreeData.GetOffsetVector(7) * radius).ToVector3(), color, time);
     }
-
-
 
     public static void DrawCube(float3 center, float radius, int batchCount, Material material)
     {
@@ -97,7 +95,7 @@ public class DebugRenderer
             go = new GameObject();
             meshFilter = go.AddComponent<MeshFilter>();
             meshRenderer = go.AddComponent<MeshRenderer>();
-            meshFilter.sharedMesh = mesh;
+            //meshFilter.sharedMesh = mesh;
             meshRenderer.material = material;
             gameObjects.Add(go);
         }

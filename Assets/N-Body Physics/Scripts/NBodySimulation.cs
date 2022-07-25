@@ -38,13 +38,14 @@ public class NBodySimulation : MonoBehaviour
         {
             CreateNBodies(numberOfBodies);
         }
+
         octree = new Octree();
         octree.Init(orbitalBodies.Length);
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
-        UpdateSystem(optimization);
+        UpdateSystem(optimization, Time.fixedDeltaTime);
         for (int i = 0; i < orbitalBodies.Length; i++)
             DrawBody(i);
     }
@@ -83,7 +84,7 @@ public class NBodySimulation : MonoBehaviour
         }
     }
 
-    private void UpdateSystem(Optimization optimizationMethod)
+    private void UpdateSystem(Optimization optimizationMethod, float time)
     {
         //Optimazation None - Not good for anything
         if (optimizationMethod == Optimization.None)
@@ -100,7 +101,7 @@ public class NBodySimulation : MonoBehaviour
                 for (int j = 0; j < orbitalBodies.Length; j++)
                 {
                     var orbitalBody = orbitalBodies[j];
-                    orbitalBody.ApplyForces(lossyTimeScale * Time.deltaTime);
+                    orbitalBody.ApplyForces(lossyTimeScale * time);
                     orbitalBodies[j] = orbitalBody;
                 }
             }
@@ -112,7 +113,7 @@ public class NBodySimulation : MonoBehaviour
             NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
             var job = new UpdateSystemBurstJob()
             {
-                time = lossyTimeScale * Time.deltaTime,
+                time = lossyTimeScale * time,
                 orbitalBodies = orbitalBodies,
             };
             for (int i = 0; i < lossLessTimeScale; i++)
@@ -145,7 +146,7 @@ public class NBodySimulation : MonoBehaviour
                 for (int j = 0; j < orbitalBodies.Length; j++)
                 {
                     var orbitalBody = orbitalBodies[j];
-                    orbitalBody.ApplyForces(lossyTimeScale * Time.deltaTime);
+                    orbitalBody.ApplyForces(lossyTimeScale * time);
                     orbitalBodies[j] = orbitalBody;
                 }
             }
@@ -155,16 +156,16 @@ public class NBodySimulation : MonoBehaviour
         else if (optimizationMethod == Optimization.BurstAndParallelForceCalculations)
         {
             NativeArray<JobHandle> jobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.TempJob);
-            NativeArray<JobHandle> calculateAllForcesJJobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.Temp);
+            NativeArray<JobHandle> calculateAllForcesJobHandles = new NativeArray<JobHandle>(lossLessTimeScale, Allocator.Temp);
 
             var calculateAllForcesJob = new CalculateAllForcesJob()
             {
                 orbitalBodies = orbitalBodies,
             };
 
-            var job = new ApplyFrocesJob()
+            var job = new ApplyForcesJob()
             {
-                time = lossyTimeScale * Time.deltaTime,
+                time = lossyTimeScale * time,
                 orbitalBodies = orbitalBodies,
             };
 
@@ -172,27 +173,52 @@ public class NBodySimulation : MonoBehaviour
             {
                 if (i == 0)
                 {
-                    calculateAllForcesJJobHandles[i] = calculateAllForcesJob.Schedule(orbitalBodies.Length, 1);
+                    calculateAllForcesJobHandles[i] = calculateAllForcesJob.Schedule(orbitalBodies.Length, 1);
                 }
                 else
                 {
-                    calculateAllForcesJJobHandles[i] = calculateAllForcesJob.Schedule(orbitalBodies.Length, 1, jobHandles[i - 1]);
+                    calculateAllForcesJobHandles[i] = calculateAllForcesJob.Schedule(orbitalBodies.Length, 1, jobHandles[i - 1]);
                 }
-                jobHandles[i] = job.Schedule(calculateAllForcesJJobHandles[i]);
+                jobHandles[i] = job.Schedule(calculateAllForcesJobHandles[i]);
             }
             JobHandle.CompleteAll(jobHandles);
             jobHandles.Dispose();
-            octree.GenerateTree(new NativeArray<OrbitalBody>(orbitalBodies, Allocator.TempJob));
+            //octree.GenerateTree(orbitalBodies);
         }
         else if (optimizationMethod == Optimization.BarnesHut)
         {
-            octree.GenerateTree(new NativeArray<OrbitalBody>(orbitalBodies, Allocator.TempJob));
+            JobHandle generateTreeHandle;
+            JobHandle applyForceHandle;
+            JobHandle calculateForcesJobHandle;
+
+            BarnesHutCalculateAllForcesJob barnesHutCalculateForcesJob = new BarnesHutCalculateAllForcesJob()
+            {
+                orbitalBodies = orbitalBodies,
+                theta = 1f,
+            };
+
+            ApplyForcesJob applyForcesJob = new ApplyForcesJob()
+            {
+                time = lossyTimeScale * time,
+                orbitalBodies = orbitalBodies,
+            };
+
+            //JobHandle calculateForceHandle = barnesHutCalculateAllForcesJob.Schedule(orbitalBodies.Length, 1);
+
+            for (int i = 0; i < lossLessTimeScale; i++)
+            {
+                octree.GenerateTree(orbitalBodies);
+                barnesHutCalculateForcesJob.nodes = octree.nodes;
+                calculateForcesJobHandle = barnesHutCalculateForcesJob.Schedule(orbitalBodies.Length, 1);
+                applyForceHandle = applyForcesJob.Schedule(calculateForcesJobHandle);
+                applyForceHandle.Complete();
+            }
         }
     }
 }
 
 //JOB
-[BurstCompile(CompileSynchronously = false)]
+[BurstCompile]
 public struct UpdateSystemBurstJob : IJob
 {
     [NativeDisableParallelForRestriction]
@@ -222,7 +248,7 @@ public struct UpdateSystemBurstJob : IJob
 }
 
 //JOB
-[BurstCompile(CompileSynchronously = false)]
+[BurstCompile]
 public struct CalculateAllForcesJob : IJobParallelFor
 {
     [NativeDisableParallelForRestriction]
@@ -236,8 +262,8 @@ public struct CalculateAllForcesJob : IJobParallelFor
 }
 
 //JOB
-[BurstCompile(CompileSynchronously = false)]
-public struct ApplyFrocesJob : IJob
+[BurstCompile]
+public struct ApplyForcesJob : IJob
 {
     [NativeDisableParallelForRestriction]
     public NativeArray<OrbitalBody> orbitalBodies;
@@ -249,6 +275,73 @@ public struct ApplyFrocesJob : IJob
             var orbitalBody = orbitalBodies[i];
             orbitalBody.ApplyForces(time);
             orbitalBodies[i] = orbitalBody;
+        }
+    }
+}
+
+//JOB
+//[BurstCompile]
+public struct BarnesHutCalculateAllForcesJob : IJobParallelFor
+{
+    [NativeDisableParallelForRestriction]
+    public NativeArray<OrbitalBody> orbitalBodies;
+    [NativeDisableParallelForRestriction]
+    public NativeArray<Node<NBodyNodeData>> nodes;
+    public double theta;
+    //public int iteration;
+
+    public void Execute(int index)
+    {
+        //iteration = 0;
+        var orbitalBody = orbitalBodies[index];
+
+        Vector3D force;
+        force = CalculateForces(orbitalBody, nodes[0], index);
+        orbitalBody.nextForceVector = force;;
+        orbitalBodies[index] = orbitalBody;
+        //Debug.Log(iteration);
+    }
+
+
+    private Vector3D CalculateForces(OrbitalBody orbitalBody, Node<NBodyNodeData> node, int index)
+    {
+        Vector3D force = Vector3D.zero;
+
+        if (node.data.mass == 0) { /*Debug.Log("Mass = 0");*/ return Vector3D.zero; }
+        if (node.data.centerOfMass == orbitalBody.orbitalData.position) { /*Debug.Log($"{orbitalBody.planetaryData.mass} {node.index}");*/ return Vector3D.zero; }
+
+        if ((node.spacialData.radius * 2) / Vector3D.Distance(orbitalBody.orbitalData.position, node.data.centerOfMass) < theta || node.endNode)
+        {
+            //if (index == 5)
+            //{
+            //    Debug.DrawLine((orbitalBody.orbitalData.position / 5e+09).ToVector3(), (node.data.centerOfMass / 5e+09).ToVector3(), Color.green, 0f);
+            //    DebugRenderer.DebugDrawCube(node.data.centerOfMass / 5e+09, node.data.mass / nodes[0].data.mass + .01f, Color.magenta, 0f);
+            //    DebugRenderer.DebugDrawCube(node.spacialData.center / 5e+09, node.spacialData.radius / 5e+09, Color.blue, 0f);
+            //}
+            //iteration++;
+            
+            return NBodyPhysics.CalculateForceOfGravity(orbitalBody.orbitalData.position, orbitalBody.planetaryData.mass, node.data.centerOfMass, node.data.mass);
+        }
+        else
+        {
+            //if (index == 5)
+            //{
+            //    Debug.DrawLine((orbitalBody.orbitalData.position / 5e+09).ToVector3(), (node.data.centerOfMass / 5e+09).ToVector3(), Color.gray, 0f);
+            //    DebugRenderer.DebugDrawCube(node.data.centerOfMass / 5e+09, .1f, Color.red, 0f);
+            //    DebugRenderer.DebugDrawCube(node.spacialData.center / 5e+09, node.spacialData.radius / 5e+09, Color.yellow, 0f);
+            //    Debug.Log("Fail  " + (node.spacialData.radius * 2) / Vector3D.Distance(orbitalBody.orbitalData.position, node.data.centerOfMass));
+            //    Debug.Log(orbitalBody.orbitalData.position);
+
+
+            //    Debug.DrawLine(Vector3.zero, Vector3.one, Color.yellow, 0f);
+            //}
+            //Debug.Log("Split " + index);
+            for (int i = 0; i < 8; i++)
+            {
+                force += CalculateForces(orbitalBody, nodes[node.nodeChildren.GetChildIndex(i)], index);
+            }
+            //Debug.Log("FoundForce " + index);
+            return force;
         }
     }
 }

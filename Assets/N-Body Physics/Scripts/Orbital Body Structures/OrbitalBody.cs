@@ -1,4 +1,5 @@
 using Unity.Collections;
+using UnityEngine;
 
 [System.Serializable]
 public struct OrbitalBody
@@ -6,7 +7,6 @@ public struct OrbitalBody
     public int index;
     public OrbitalData orbitalData;
     public PlanetaryData planetaryData;
-
     public Vector3D nextForceVector;
 
     public OrbitalBody(OrbitalBodySO so, int index)
